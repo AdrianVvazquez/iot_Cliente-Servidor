@@ -16,7 +16,7 @@
 /* server parameters */
 #define SERV_PORT       8080              /* port */
 #define SERV_HOST_ADDR "192.168.0.21"     /* IP, only IPV4 support  */
-#define BUF_SIZE        100               /* Buffer rx, tx max size  */
+#define BUF_SIZE        150               /* Buffer rx, tx max size  */
 #define BACKLOG         5                 /* Max. client pending connections  */
 
 int main(int argc, char* argv[])          /* input arguments are not used */
@@ -26,7 +26,7 @@ int main(int argc, char* argv[])          /* input arguments are not used */
     struct sockaddr_in servaddr, client; 
     
     int  len_rx;                     /* received and sent length, in bytes */
-    char buff_tx[BUF_SIZE] = "Hello client, I am the server. Choose an option\n [1]Accelerometer\n[2]Magnetometer\n[3]Gyroscope\n[4]All sensors";
+    char buff_tx[BUF_SIZE] = "Hello client, this is The server. Choose an option\n [1]Accelerometer\n[2]Magnetometer\n[3]Gyroscope\n[4]All sensors";
     char buff_rx[BUF_SIZE];   /* buffers for reception  */
     
      
@@ -79,7 +79,7 @@ int main(int argc, char* argv[])          /* input arguments are not used */
       while(1)
       {
         connfd = accept(sockfd, (struct sockaddr *)&client, &len); 
-        if (connfd < 0) 
+        if (connfd < 0) 	// file descriptor < 0
         { 
             fprintf(stderr, "[SERVER-error]: connection not accepted. %d: %s \n", errno, strerror( errno ));
             return -1;

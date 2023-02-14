@@ -13,16 +13,34 @@
 #define SERVER_ADDRESS  "192.168.0.21"     /* server IP */
 #define PORT            8080 
 
+struct Frame 
+{
+	unsigned char sof;	// start of frame=0xAA | 170 ASCII
+	unsigned char sensor;  // 01 | 02 | 03 | FF
+	unsigned char axis;	// x:01 | y:02 | z:03 | 04
+	int8_t checksum;  // sum calculated from SOF+ sensor+ Axis
+};
+
 /* Test sequences */
-char buf_tx[] = "Hello server. I am a client";      
-char buf_rx[100];                     /* receive buffer */
+char buf_tx[] = "Hello server. I am a client";
+char buf_rx[150];                /* receive buffer */
  
  
 /* This clients connects, sends a text and disconnects */
-int main() 
+int main(int32_t argc, char *argv[]) 
 { 
-    int sockfd; 
+    int sockfd;
+    unsigned char sof_input = atoi(argv[1]);
+    unsigned char sensor_input = atoi(argv[2]);
+    unsigned char axis_input = atoi(argv[3]);
+    
     struct sockaddr_in servaddr; 
+    struct Frame command_frame = {sof_input,sensor_input,axis_input,3};
+    //command_frame.checksum = (sizeof(command_frame.sof)+ sizeof(command_frame.sensor+ sizeof(command_frame.axis);
+    
+    //printf("%li :",sizeof(command_frame));
+    printf("-> axis: %i\n",command_frame.axis);
+
     
     /* Socket creation */
     sockfd = socket(AF_INET, SOCK_STREAM, 0); 
