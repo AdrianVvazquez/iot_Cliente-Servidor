@@ -39,6 +39,8 @@ int main(int32_t argc, char *argv[])
     //command_frame.checksum = (sizeof(command_frame.sof)+ sizeof(command_frame.sensor+ sizeof(command_frame.axis);
     
     //printf("%li :",sizeof(command_frame));
+    printf("-> sof: %i\n",command_frame.sof);
+    printf("-> sensor: %i\n",command_frame.sensor);
     printf("-> axis: %i\n",command_frame.axis);
 
     
