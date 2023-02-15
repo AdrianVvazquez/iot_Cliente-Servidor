@@ -13,13 +13,14 @@
 /* strings / errors*/
 #include <errno.h>
 #include <stdio.h> 
+#include <stdlib.h>
 #include <string.h> 
 
 /* server parameters */
-#define SERV_PORT       8080              /* port */
-#define SERV_HOST_ADDR "192.168.0.21"     /* IP, only IPV4 support  */
-#define BUF_SIZE        150               /* Buffer rx, tx max size  */
-#define BACKLOG         5                 /* Max. client pending connections  */
+#define PORT           8080              /* port */
+#define SERV_HOST_ADDR "192.168.0.21"    /* IP, only IPV4 support  */
+#define BUF_SIZE       150               /* Buffer rx, tx max size  */
+#define BACKLOG        5                 /* Max. client pending connections  */
 
 
 int Crear_Socket(){
@@ -49,7 +50,7 @@ int Crear_Socket(){
 	serverAddr.sin_addr.s_addr = inet_addr(SERV_HOST_ADDR);
 
     /*Bind*/
-    if ((bind(sockfd, (struct sockaddr *)&servAddr, sizeof(servAddr))) != 0){
+    if ((bind(sockfd, (struct sockaddr *)&serverAddr, sizeof(serverAddr))) != 0){
 		printf("[SERVER-ERROR]: Error in binding.\n");
 		exit(1);
 	} else{
@@ -71,8 +72,9 @@ int Escuchar_Socket(int sockfd){
 
 int Despachar_Socket(int connfd){
     char buff_rx[BUF_SIZE];
+    int len_rx;
 
-    printf("[Server]: Conexión aceptada %s:%d\n", inet_ntoa(newAddr.sin_addr), ntohs(newAddr.sin_port));
+    printf("[Server]: Conexión aceptada %s:%d\n", inet_ntoa(clientAddr.sin_addr), ntohs(newAddr.sin_port));
     while(1){  
         /* read client message, copy it into buffer */
         len_rx = read(connfd, buff_rx, sizeof(buff_rx));  
@@ -84,7 +86,7 @@ int Despachar_Socket(int connfd){
             close(connfd);
             break; 
         } else{
-            write(connfd, buff_tx, strlen(buff_tx));
+            write(connfd, buff_rx, strlen(buff_tx));
             printf("[SERVER]: %s \n", buff_rx);
         }
     }
