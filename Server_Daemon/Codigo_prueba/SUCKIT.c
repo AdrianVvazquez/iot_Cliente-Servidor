@@ -58,7 +58,7 @@ int Crear_Socket(){
     return sockfd;
 }
 
-int Escuchar_socket(int sockfd){
+int Escuchar_Socket(int sockfd){
     int connfd;
     struct sockaddr_in clientAddr;
 
@@ -67,28 +67,23 @@ int Escuchar_socket(int sockfd){
     return connfd;
 }
 
-int Despachar(int connfd){
+int Despachar_Socket(int connfd){
     char buff_rx[BUF_SIZE];
 
-    if(connfd < 0){
-        fprintf(stderr, "[SERVER-ERROR]: Conexión rechazada. %d: %s \n", errno, strerror( errno ));
-        return -1;
-    } else{
-        printf("[Server]: Conexión aceptada %s:%d\n", inet_ntoa(newAddr.sin_addr), ntohs(newAddr.sin_port));
-        while(1){  
-            /* read client message, copy it into buffer */
-            len_rx = read(connfd, buff_rx, sizeof(buff_rx));  
-                
-            if(len_rx == -1){
-                fprintf(stderr, "[SERVER-error]: connfd cannot be read. %d: %s \n", errno, strerror( errno ));
-            } else if(len_rx == 0){
-                printf("[SERVER]: client socket closed \n\n");
-                close(connfd);
-                break; 
-            } else{
-                write(connfd, buff_tx, strlen(buff_tx));
-                printf("[SERVER]: %s \n", buff_rx);
-            }
+    printf("[Server]: Conexión aceptada %s:%d\n", inet_ntoa(newAddr.sin_addr), ntohs(newAddr.sin_port));
+    while(1){  
+        /* read client message, copy it into buffer */
+        len_rx = read(connfd, buff_rx, sizeof(buff_rx));  
+            
+        if(len_rx == -1){
+            fprintf(stderr, "[SERVER-error]: connfd cannot be read. %d: %s \n", errno, strerror( errno ));
+        } else if(len_rx == 0){
+            printf("[SERVER]: client socket closed \n\n");
+            close(connfd);
+            break; 
+        } else{
+            write(connfd, buff_tx, strlen(buff_tx));
+            printf("[SERVER]: %s \n", buff_rx);
         }
     }
 	close(connfd);
