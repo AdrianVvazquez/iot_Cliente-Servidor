@@ -15,15 +15,22 @@
 
 /* server parameters */
 #define SERV_PORT       8080              /* port */
-#define SERV_HOST_ADDR "192.168.0.21"     /* IP, only IPV4 support  */
+#define SERV_HOST_ADDR "192.168.246.131"     /* IP, only IPV4 support  */
 #define BUF_SIZE        150               /* Buffer rx, tx max size  */
 #define BACKLOG         5                 /* Max. client pending connections  */
+
+struct Json_data 
+{
+	char exit[4];
+};
+
 
 int main(int argc, char* argv[])          /* input arguments are not used */
 { 
     int sockfd, connfd ;  /* listening socket and connection socket file descriptors */
     unsigned int len;     /* length of client address */
     struct sockaddr_in servaddr, client; 
+    //struct Json_data json = {"exit"}; 
     
     int  len_rx;                     /* received and sent length, in bytes */
     char buff_tx[BUF_SIZE] = "Hello client, this is The server. Choose an option\n [1]Accelerometer\n[2]Magnetometer\n[3]Gyroscope\n[4]All sensors";
@@ -103,8 +110,15 @@ int main(int argc, char* argv[])          /* input arguments are not used */
                 }
                 else
                 {
+					if(strncmp(buff_rx, "exit",4)==0){
+						printf("Exit enetered");
+						//strcpy(buff_tx, "Bye");
+						//write(connfd, buff_tx, strlen(buff_tx));
+						//close(connfd);
+					}
+					
                     write(connfd, buff_tx, strlen(buff_tx));
-                    printf("[SERVER]: %s \n", buff_rx);
+                    printf("[CLIENT]: %s \n", buff_rx);
                 }            
             }  
         }                      

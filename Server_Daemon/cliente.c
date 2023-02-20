@@ -1,5 +1,3 @@
-/*Cliente*/
-
 #include <netdb.h> 
 #include <stdio.h> 
 #include <stdlib.h> 
@@ -10,7 +8,7 @@
 #include <arpa/inet.h> 
 #include <unistd.h>
 
-#define SERVER_ADDRESS  "192.168.0.21"     /* server IP */
+#define SERVER_ADDRESS  "192.168.246.131"     /* server IP */
 #define PORT            8080 
 
 struct Frame 
@@ -27,21 +25,21 @@ char buf_rx[150];                /* receive buffer */
  
  
 /* This clients connects, sends a text and disconnects */
-int main(int32_t argc, char *argv[]) 
+int main() 
 { 
     int sockfd;
-    unsigned char sof_input = atoi(argv[1]);
-    unsigned char sensor_input = atoi(argv[2]);
-    unsigned char axis_input = atoi(argv[3]);
+    //unsigned char sof_input = atoi(argv[1]);
+    //unsigned char sensor_input = atoi(argv[2]);
+    //unsigned char axis_input = atoi(argv[3]);
     
     struct sockaddr_in servaddr; 
-    struct Frame command_frame = {sof_input,sensor_input,axis_input,3};
+    //struct Frame command_frame = {0};
     //command_frame.checksum = (sizeof(command_frame.sof)+ sizeof(command_frame.sensor+ sizeof(command_frame.axis);
     
     //printf("%li :",sizeof(command_frame));
-    printf("-> sof: %i\n",command_frame.sof);
-    printf("-> sensor: %i\n",command_frame.sensor);
-    printf("-> axis: %i\n",command_frame.axis);
+    //printf("-> sof: %i\n",command_frame.sof);
+    //printf("-> sensor: %i\n",command_frame.sensor);
+    //printf("-> axis: %i\n",command_frame.axis);
 
     
     /* Socket creation */
@@ -74,9 +72,15 @@ int main(int32_t argc, char *argv[])
     printf("connected to the server..\n"); 
   
     /* send test sequences*/
-    write(sockfd, buf_tx, sizeof(buf_tx));     
-    read(sockfd, buf_rx, sizeof(buf_rx));
-    printf("CLIENT:Received: %s \n", buf_rx);
+    while(1)
+    {
+		write(sockfd, buf_tx, sizeof(buf_tx));     
+		read(sockfd, buf_rx, sizeof(buf_rx));
+		printf("[CLIENT]: %s \n", buf_rx);
+		fgets(buf_tx,sizeof(buf_tx),stdin);
+		write(sockfd, buf_tx, sizeof(buf_tx));
+		
+    }
    
        
     /* close the socket */
