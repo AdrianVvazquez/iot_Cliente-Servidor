@@ -1,112 +1,119 @@
-/*standard symbols */
-#include <unistd.h>  
-
-/* sockets */
-// #include <netdb.h> 
-#include <netinet/in.h> 
-#include <sys/socket.h> 
-#include <sys/types.h> 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <sys/socket.h>
+#include <sys/types.h>
+#include <netinet/in.h>
 #include <arpa/inet.h>
 
-/* strings / errors*/
-#include <errno.h>
-#include <stdio.h> 
-#include <string.h> 
+#define PORT 8080
+#define IP "192.168.43.231"
+#define BUFFER 1024
+#define MAX_CONN 2
 
-/* server parameters */
-#define SERV_PORT       8080              /* port */
-#define SERV_HOST_ADDR "192.168.0.21"     /* IP, only IPV4 support  */
-#define BUF_SIZE        150               /* Buffer rx, tx max size  */
-#define BACKLOG         5                 /* Max. client pending connections  */
+typedef struct client_conn {
+    int fd;
+    struct client_conn* next;
+} client_conn_t;
 
-int main(int argc, char* argv[])          /* input arguments are not used */
-{ 
-    int sockfd, connfd ;  /* listening socket and connection socket file descriptors */
-    unsigned int len;     /* length of client address */
-    struct sockaddr_in servaddr, client; 
-    
-    int  len_rx;                     /* received and sent length, in bytes */
-    char buff_tx[BUF_SIZE] = "Hello client, this is The server. Choose an option\n [1]Accelerometer\n[2]Magnetometer\n[3]Gyroscope\n[4]All sensors";
-    char buff_rx[BUF_SIZE];   /* buffers for reception  */
-    
-     
-    /* socket creation */
-    sockfd = socket(AF_INET, SOCK_STREAM, 0); 
-    if (sockfd == -1) 
-    { 
-        fprintf(stderr, "[SERVER-error]: socket creation failed. %d: %s \n", errno, strerror( errno ));
-        return -1;
-    } 
-    else
-    {
-        printf("[SERVER]: Socket successfully created..\n"); 
+void print_node_list(client_conn_t *current_conn){
+    client_conn_t *temp = current_conn;
+    printf("Lista de clientes\n\n");
+
+    while(temp != NULL){
+        printf("fd: %d next: %d\n", temp->fd, temp->next);
+        temp = temp->next;
     }
+}
+
+client_conn_t *create_new_node(client_conn_t *current, int fd){
+    client_conn_t *new_node = malloc(sizeof(client_conn_t));
+    new_node->fd = fd;
+    new_node->next = current;
+
+    return new_node;
+}
+
+int main(){
+    /*variables para pruebs*/
+    int tiempo = 0, new_conn;
+    client_conn_t *current_conn = NULL, *tmp;
+
+	int sockfd, binded;
+	struct sockaddr_in serverAddr;
+
+	int connfd;
+	struct sockaddr_in newAddr;
+
+	socklen_t addr_size;
+
+	char buffer[BUFFER];
+
+    /*Crear socket*/
+	sockfd = socket(AF_INET, SOCK_STREAM, 0);
     
-    /* clear structure */
-    memset(&servaddr, 0, sizeof(servaddr));
-  
-    /* assign IP, SERV_PORT, IPV4 */
-    servaddr.sin_family      = AF_INET; 
-    servaddr.sin_addr.s_addr = inet_addr(SERV_HOST_ADDR); 
-    servaddr.sin_port        = htons(SERV_PORT); 
-    
-    
-    /* Bind socket */
-    if ((bind(sockfd, (struct sockaddr *)&servaddr, sizeof(servaddr))) != 0) 
-    { 
-        fprintf(stderr, "[SERVER-error]: socket bind failed. %d: %s \n", errno, strerror( errno ));
-        return -1;
-    } 
-    else
-    {
-        printf("[SERVER]: Socket successfully binded \n");
-    }
-  
-    /* Listen */
-    if ((listen(sockfd, BACKLOG)) != 0) 
-    { 
-        fprintf(stderr, "[SERVER-error]: socket listen failed. %d: %s \n", errno, strerror( errno ));
-        return -1;
-    } 
-    else
-    {
-        printf("[SERVER]: Listening on SERV_PORT %d \n\n", ntohs(servaddr.sin_port) ); 
-    }
-    
-    len = sizeof(client); 
-  
-      /* Accept the data from incoming sockets in a iterative way */
-      while(1)
-      {
-        connfd = accept(sockfd, (struct sockaddr *)&client, &len); 
-        if (connfd < 0) 	// file descriptor < 0
-        { 
-            fprintf(stderr, "[SERVER-error]: connection not accepted. %d: %s \n", errno, strerror( errno ));
-            return -1;
-        } 
-        else
-        {              
-            while(1) /***** read data from a client socket till it is closed *****/ 
-            {  
-                /* read client message, copy it into buffer */
-                len_rx = read(connfd, buff_rx, sizeof(buff_rx));  
-                
-                if(len_rx == -1)
-                {
-                    fprintf(stderr, "[SERVER-error]: connfd cannot be read. %d: %s \n", errno, strerror( errno ));
-                }
-                else if(len_rx == 0) /* if length is 0 client socket closed, then exit */
-                {
-                    printf("[SERVER]: client socket closed \n\n");
-                    close(connfd);
-                    break; 
-                }
-                else
-                {
-                    write(connfd, buff_tx, strlen(buff_tx));
-                    printf("[SERVER]: %s \n", buff_rx);
-                }            
-            }  
-        }                      
-    }    
+	if(sockfd < 0){
+		printf("[SERVER]: Error in connection.\n");
+		exit(1);
+	}
+	printf("[SERVER]: Server Socket is created.\n");
+
+    /*Configurar socket*/
+	memset(&serverAddr, '\0', sizeof(serverAddr));
+	serverAddr.sin_family = AF_INET;
+	serverAddr.sin_port = htons(PORT);
+	serverAddr.sin_addr.s_addr = inet_addr(IP);
+
+    /*Asociar a direccion ip*/
+	binded = bind(sockfd, (struct sockaddr*)&serverAddr, sizeof(serverAddr));
+	if(binded < 0){
+		printf("[SERVER]: Error in binding.\n");
+		exit(1);
+	}
+	printf("[SERVER]: Bind to port %d\n", PORT);
+
+    /*Escuchar socket*/
+	if(listen(sockfd, MAX_CONN) == 0){
+		printf("[SERVER]: Listening....\n");
+	} else{
+		printf("[SERVER]: Error in listening.\n");
+	}
+
+	while(1){
+        /*guardar en arreglo*/
+        new_conn = accept(sockfd, (struct sockaddr*)&newAddr, &addr_size);
+		tmp = create_new_node(current_conn, new_conn);
+        current_conn = tmp;
+        print_node_list(current_conn);
+
+	// 	if(conn_list[0].fd < 0){
+	// 		exit(1);
+	// 	} else{
+            
+    //         printf("client [%d] Accepted from %s:%d\n", conn_list[0].fd, inet_ntoa(newAddr.sin_addr), ntohs(newAddr.sin_port));
+    //         printf("sizeof: %d contenido: %d\n\n", sizeof(conn_list[0].fd), &conn_list[0].fd);
+    //         /*posible hilo*/
+    //         // while(1){
+    //         //     bzero(buffer, sizeof(buffer));
+    //         //     recv(conn_list[0].fd, buffer, 1024, 0);
+    //         //     printf("Tiempo: [%d] buff: [%s]", tiempo, buffer);
+    //         //     sleep(1);
+    //         //     if(strcmp(buffer, ":exit") == 0){
+    //         //         printf("Disconnected from %s:%d\n", inet_ntoa(newAddr.sin_addr), ntohs(newAddr.sin_port));
+    //         //         break;
+    //         //     }else{
+    //         //         printf("Client: %s\n", buffer);
+    //         //         send(conn_list[0].fd, "ok", strlen(buffer), 0);
+    //         //     }
+    //         //     tiempo++;
+    //         // }
+    //     }
+    //     sleep(2);
+	}
+
+	// close(conn_list[0].fd);
+
+
+	return 0;
 }
