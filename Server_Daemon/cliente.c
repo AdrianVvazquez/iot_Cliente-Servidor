@@ -1,16 +1,19 @@
-#include <pthread.h>
-#include <netdb.h> 
-#include <stdio.h> 
+/*standard symbols */
+#include <unistd.h>
 #include <stdlib.h> 
-#include <string.h> 
+/* sockets */
 #include <sys/socket.h> 
-#include <unistd.h>
-#include <netinet/in.h>
 #include <arpa/inet.h> 
-#include <unistd.h>
+#include <netinet/in.h>
+#include <netdb.h> 
+/* strings / errors*/
+#include <stdio.h> 
+#include <string.h> 
+/* threads */
+#include <pthread.h>
 
-#define SERVER_ADDRESS  "192.168.43.231"     /* server IP */
-//#define SERVER_ADDRESS "192.168.246.131"     /* IP, only IPV4 support  */
+//#define SERVER_ADDRESS  "192.168.43.231"     /* server IP */
+#define SERVER_ADDRESS "192.168.246.131"     /* IP, only IPV4 support  */
 #define PORT            8080 
 
 struct Frame 
@@ -39,21 +42,23 @@ int main()
     struct Frame command_frame = {0};
     //command_frame.checksum = (sizeof(command_frame.sof)+ sizeof(command_frame.sensor+ sizeof(command_frame.axis);
     
-    printf("%li :",sizeof(command_frame));
     printf("-> sof: %i\n",command_frame.sof);
     printf("-> sensor: %i\n",command_frame.sensor);
     printf("-> axis: %i\n",command_frame.axis);
+    printf("-> checksum: %i\n",command_frame.checksum);
+    printf("frame size: %li\n",sizeof(command_frame));
     
+    // SOCKET
     /* Socket creation */
     sockfd = socket(AF_INET, SOCK_STREAM, 0); 
     if (sockfd == -1) 
     { 
-        printf("CLIENT: socket creation failed...\n"); 
+        printf("Status: socket creation failed...\n"); 
         return -1;  
     } 
     else
     {
-        printf("CLIENT: Socket successfully created..\n"); 
+        printf("Status: Socket successfully created..\n"); 
     }
     
     memset(&servaddr, 0, sizeof(servaddr));
@@ -63,28 +68,25 @@ int main()
     servaddr.sin_addr.s_addr = inet_addr( SERVER_ADDRESS );
     servaddr.sin_port = htons(PORT); 
   
+  	// CONNECT
     /* try to connect the client socket to server socket */
     if(connect(sockfd, (struct sockaddr*)&servaddr, sizeof(servaddr)) != 0) 
     { 
-        printf("connection with the server failed...\n");
+        printf("Status: Connection with the server failed...\n");
         return -1;
     } 
-    printf("connected to the server..\n");
+    printf("Status: Connected to the server..\n\n");
         
-    // FIRST MESSAGE
-	// READ()
-	recv(sockfd, buf_rx, sizeof(buf_rx),0);
-	printf("[SERVER]: %s \n", buf_rx);
-  
     /* hilo 1*/
-    while(1)
-    {
-    	// 
-    
-    	// READ KEYBOARD
-		fgets(buf_tx,sizeof(buf_tx),stdin);
+    //while(1)
+    //{
 		// LOCK RESOURCES
     	pthread_mutex_lock(&socketMutex);
+		// READ()
+		recv(sockfd, buf_rx, sizeof(buf_rx),0);
+		printf("[SERVER]: %s \n", buf_rx);
+    	// GET KEYBOARD KEYS
+		fgets(buf_tx,sizeof(buf_tx),stdin);
     	// WRITE()
 		send(sockfd, buf_tx, sizeof(buf_tx),0);
 		// READ()
@@ -92,10 +94,11 @@ int main()
 		printf("[SERVER]: %s \n", buf_rx);
 		// UNLOCK RESOURCES
         pthread_mutex_unlock(&socketMutex);
+        //printf("Sesion finalized. Press enter to exit...\n");
         // SYNCHRONIZE
-		sleep(1);
+		//sleep(3);
 		
-    }
+    //}
    
        
     /* close the socket */
