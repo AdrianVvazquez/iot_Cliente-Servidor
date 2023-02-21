@@ -16,8 +16,10 @@
 /* server parameters */
 #define SERV_PORT       8080              /* port */
 #define SERV_HOST_ADDR "192.168.246.131"     /* IP, only IPV4 support  */
-#define BUF_SIZE        150               /* Buffer rx, tx max size  */
+//#define SERV_HOST_ADDR "192.168.43.231"     /* IP, only IPV4 support  */
+#define BUF_SIZE        1024               /* Buffer rx, tx max size  */
 #define BACKLOG         5                 /* Max. client pending connections  */
+//#define EXIT 			0
 
 struct Json_data 
 {
@@ -30,7 +32,7 @@ int main(int argc, char* argv[])          /* input arguments are not used */
     int sockfd, connfd ;  /* listening socket and connection socket file descriptors */
     unsigned int len;     /* length of client address */
     struct sockaddr_in servaddr, client; 
-    //struct Json_data json = {"exit"}; 
+    //struct Json_data json = {"exit"};
     
     int  len_rx;                     /* received and sent length, in bytes */
     char buff_tx[BUF_SIZE] = "Hello client, this is The server. Choose an option\n [1]Accelerometer\n[2]Magnetometer\n[3]Gyroscope\n[4]All sensors";
@@ -38,7 +40,7 @@ int main(int argc, char* argv[])          /* input arguments are not used */
     
      
     /* socket creation */
-    sockfd = socket(AF_INET, SOCK_STREAM, 0); 
+    sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (sockfd == -1) 
     { 
         fprintf(stderr, "[SERVER-error]: socket creation failed. %d: %s \n", errno, strerror( errno ));
@@ -96,7 +98,7 @@ int main(int argc, char* argv[])          /* input arguments are not used */
             while(1) /***** read data from a client socket till it is closed *****/ 
             {  
                 /* read client message, copy it into buffer */
-                len_rx = read(connfd, buff_rx, sizeof(buff_rx));  
+                len_rx = read(connfd, buff_rx, sizeof(buff_rx));
                 
                 if(len_rx == -1)
                 {
@@ -110,17 +112,13 @@ int main(int argc, char* argv[])          /* input arguments are not used */
                 }
                 else
                 {
-					if(strncmp(buff_rx, "exit",4)==0){
-						printf("Exit enetered");
-						//strcpy(buff_tx, "Bye");
-						//write(connfd, buff_tx, strlen(buff_tx));
-						//close(connfd);
-					}
-					
                     write(connfd, buff_tx, strlen(buff_tx));
+                    read(connfd, buff_rx, strlen(buff_rx));
                     printf("[CLIENT]: %s \n", buff_rx);
                 }            
             }  
         }                      
     }    
 }
+
+
