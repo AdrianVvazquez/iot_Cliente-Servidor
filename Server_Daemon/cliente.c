@@ -12,8 +12,8 @@
 /* threads */
 #include <pthread.h>
 
-#define SERVER_ADDRESS  "192.168.43.231"     /* server IP */
-//#define SERVER_ADDRESS "192.168.246.131"     /* IP, only IPV4 support  */
+#define SERVER_ADDRESS "192.168.246.131"     /* IP, only IPV4 support  */
+//#define SERVER_ADDRESS  "192.168.43.231"     /* server IP */
 #define PORT            8080 
 
 struct Frame 
@@ -88,6 +88,7 @@ int main()
 		fgets(buf_tx,sizeof(buf_tx),stdin);
     	// WRITE()
 		send(sockfd, buf_tx, sizeof(buf_tx),0);
+		bzero(buf_tx, sizeof());
 		// READ()
 		recv(sockfd, buf_rx, sizeof(buf_rx),0);
 		printf("[SERVER]: %s \n", buf_rx);

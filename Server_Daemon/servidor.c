@@ -15,8 +15,8 @@
 
 /* server parameters */
 #define SERV_PORT       8080              /* port */
-//#define SERV_HOST_ADDR "192.168.246.131"     /* IP, only IPV4 support  */
-#define SERV_HOST_ADDR "192.168.43.231"     /* IP, only IPV4 support  */
+#define SERV_HOST_ADDR "192.168.246.131"     /* IP, only IPV4 support  */
+//#define SERV_HOST_ADDR "192.168.43.231"     /* IP, only IPV4 support  */
 #define BUF_SIZE        150               /* Buffer rx, tx max size  */
 #define BACKLOG         5                 /* Max. client pending connections  */
 
@@ -40,7 +40,7 @@ int main()          /* input arguments are not used */
     int sockfd, connfd ;  /* listening socket and connection socket file descriptors */
     unsigned int len;     /* length of client address */
     struct sockaddr_in servaddr, client; 
-    struct Json_data json = {{1,2,3,123},{1,2,3,123},{1,2,3,123},{1,2,3,123,1,2,3,123,1,2,3,123}};
+    //struct Json_data json = {{1,2,3,123},{1,2,3,123},{1,2,3,123},{1,2,3,123,1,2,3,123,1,2,3,123}};
     
 	pthread_mutex_t socketMutex = PTHREAD_MUTEX_INITIALIZER;
     
@@ -88,7 +88,7 @@ int main()          /* input arguments are not used */
     }
   
     // LISTEN
-    if ((listen(sockfd, BACKLOG)) != 0) 
+    if ((listen(sockfd, BACKLOG),5) != 0) 
     { 
         printf("[SERVER-error]: socket listen failed. %d: %s\n", errno, strerror(errno));
         return -1;
@@ -98,14 +98,14 @@ int main()          /* input arguments are not used */
         printf("Status: Listening on SERV_PORT %d \n", ntohs(servaddr.sin_port) ); 
     }
     
-    len = sizeof(client); 
+    sock_len = sizeof(client); 
     
 // HILO 1
 	/* Accept the data from incoming sockets in a iterative way */
 	while(1)
 	{
 		// ACCEPT
-		connfd = accept(sockfd, (struct sockaddr *)&client, &len);
+		connfd = accept(sockfd, (struct sockaddr *)&client, &sock_len);
         if (connfd < 0) 	// file descriptor < 0
         { 
             printf("[SERVER-error]: connection not accepted. %d: %s\n", errno, strerror(errno));
@@ -119,6 +119,8 @@ int main()          /* input arguments are not used */
 			while(1)
 			{
 				// WRITE()
+				/*	send() envía bytes por el socket específico permitiendo al programador controlar de mejor manera cómo se envía la información
+					write() escribe bytes en un descriptor */
 				len_tx = send(connfd, buff_tx, strlen(buff_tx),0);
 				printf("debug:write returns file descriptor: %i\n",len_tx);
 		            
