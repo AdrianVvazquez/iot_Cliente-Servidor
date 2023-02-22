@@ -88,8 +88,6 @@ int main()
             test_conn = send(client_list[client_n], buff_tx, strlen(buff_tx), 0);
             client_n++;
         } else {
-            printf("[SERVER]: Servidor Lleno\n");
-            sleep(1);
             continue;
         }
     }
@@ -98,51 +96,46 @@ int main()
 
 void *lupe(void *param)
 {
-    int i;
+    int i, test_send, test_recv;
 
     while(1) {
         //connfd != 0
         for (i = 0; i < MAX_CONN; i++) {
-            // if (test_conn == -1) {
-            //     printf("[SERVER-error]: connfd cannot write.\n");
-            //     break;
-            // }
-            // else if(test_conn == 0) /* if length is 0 client socket closed, then exit */
-            // {
-            //     printf("[SERVER]: client socket [%d] closed \n\n", client_list[i]);
-            //     close(client_list[i]);
-            //     client_list[i] = 0;
-            //     client_n --;
-            //     continue;
-            // } else {
-
-            printf("[DEBUG]: hola %d %d\n", i, client_list[i]);
-            sleep(1);
+            /*recibe peticion del cliente y la atiende*/
             if (client_list[i] != 0){
+                
+                /*Posible mutex para client_list*/
                 bzero(buff_rx, BUFFER);
-                recv(client_list[i], buff_rx, 1024, 0);
+                test_recv = recv(client_list[i], buff_rx, 1024, 0);
 
-                printf("[DEBUG]: adios %d %d\n", i, client_list[i]);
-
-                /*recibe peticion del cliente y la atiende*/
-                if (strncmp(buff_rx,"1",1)==0) {
-                    send(client_list[i], "accelerometer", sizeof(buff_tx),0);	
-                } else
-                if (strncmp(buff_rx,"2",1)==0) {
-                    send(client_list[i], "magnetometer", sizeof(buff_tx),0);	
-                } else
-                if (strncmp(buff_rx,"3",1)==0) {
-                    send(client_list[i], "gyroscope", sizeof(buff_tx),0);	
-                } else
-                if (strncmp(buff_rx,"4",1)==0) {
-                    send(client_list[i], "all", sizeof(buff_tx),0);	
+                if (test_recv <= 0) {
+                    close(client_list[client_n]);
                 } else {
-                    // WRITE()
-                    send(client_list[i], buff_rx, sizeof(buff_tx),0);
-                    // UNLOCK RESOURCES
+                    printf("[CLIENT %d]: %s\n", client_list[i], buff_rx);
+
+                    if (strncmp(buff_rx, "a", 1)==0) {
+                        bzero(buff_tx, BUFFER);
+                        strcpy(buff_tx, "accelerometer");
+                        test_send = send(client_list[i], buff_tx, sizeof(buff_tx), 0);	
+                    } else if (strncmp(buff_rx, "b", 1)==0) {
+                        bzero(buff_tx, BUFFER);
+                        strcpy(buff_tx, "magnometer");
+                        test_send = send(client_list[i], buff_tx, sizeof(buff_tx), 0);	
+                    } else if (strncmp(buff_rx, "c", 1)==0) {
+                        bzero(buff_tx, BUFFER);
+                        strcpy(buff_tx, "gyroscope");
+                        test_send = send(client_list[i], buff_tx, sizeof(buff_tx), 0);	
+                    } else if (strncmp(buff_rx, "d", 1)==0) {
+                        bzero(buff_tx, BUFFER);
+                        strcpy(buff_tx, "all");
+                        test_send = send(client_list[i], buff_tx, sizeof(buff_tx), 0);	
+                    }
+                    printf("test send: %d %d\n", test_send, buff_tx);
+                    close(client_list[client_n]);
                 }
+
             }
         }
-    }
-    sleep(1);
+        sleep(1);
+   }
 }
