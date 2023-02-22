@@ -12,8 +12,8 @@
 /* threads */
 #include <pthread.h>
 
-//#define SERVER_ADDRESS  "192.168.43.231"     /* server IP */
-#define SERVER_ADDRESS "192.168.246.131"     /* IP, only IPV4 support  */
+#define SERVER_ADDRESS  "192.168.43.231"     /* server IP */
+//#define SERVER_ADDRESS "192.168.246.131"     /* IP, only IPV4 support  */
 #define PORT            8080 
 
 struct Frame 
@@ -77,7 +77,6 @@ int main()
     } 
     printf("Status: Connected to the server..\n\n");
         
-    /* hilo 1*/
     //while(1)
     //{
 		// LOCK RESOURCES

@@ -15,16 +15,24 @@
 
 /* server parameters */
 #define SERV_PORT       8080              /* port */
-#define SERV_HOST_ADDR "192.168.246.131"     /* IP, only IPV4 support  */
-//#define SERV_HOST_ADDR "192.168.43.231"     /* IP, only IPV4 support  */
+//#define SERV_HOST_ADDR "192.168.246.131"     /* IP, only IPV4 support  */
+#define SERV_HOST_ADDR "192.168.43.231"     /* IP, only IPV4 support  */
 #define BUF_SIZE        150               /* Buffer rx, tx max size  */
 #define BACKLOG         5                 /* Max. client pending connections  */
-//#define EXIT 			0
 
-//struct Json_data 
-//{
-//	char exit[4];
-//};
+#define X 				0
+#define Y 				0
+#define Z 				0
+#define ALL				0
+
+// EL flujo de entrada en el otro lado del socket debe leer bytes y convertirlos de nuevo en caracteres.
+struct Json_data 
+{
+	char accelerometer[4];
+	char magnetometer[4];
+	char gyroscope[4];
+	char all[12];
+};
 
 
 int main()          /* input arguments are not used */
@@ -32,7 +40,7 @@ int main()          /* input arguments are not used */
     int sockfd, connfd ;  /* listening socket and connection socket file descriptors */
     unsigned int len;     /* length of client address */
     struct sockaddr_in servaddr, client; 
-    //struct Json_data json = {"exit"};
+    struct Json_data json = {{1,2,3,123},{1,2,3,123},{1,2,3,123},{1,2,3,123,1,2,3,123,1,2,3,123}};
     
 	pthread_mutex_t socketMutex = PTHREAD_MUTEX_INITIALIZER;
     
@@ -121,7 +129,7 @@ int main()          /* input arguments are not used */
 		        }
 		        else if(len_tx == 0) /* if length is 0 client socket closed, then exit */
 		        {
-		            printf("[SERVER]: client socket closed \n\n");
+		            printf("[SERVER]: client socket closed.\n\n");
 		            close(connfd);
 		            break; 
 		        }
@@ -136,6 +144,7 @@ int main()          /* input arguments are not used */
 						// READ()
 			            recv(connfd, buff_rx, sizeof(buff_rx),0);
 				        printf("[CLIENT]: %s \n", buff_rx);
+				        // WRITE()
 			            if(strncmp(buff_rx,"1",1)==0)
 			            {
 				            send(connfd, "accelerometer", sizeof(buff_rx),0);	
@@ -153,10 +162,9 @@ int main()          /* input arguments are not used */
 				            send(connfd, "all", sizeof(buff_rx),0);	
 			            } else
 			            {
-					        // WRITE()
 					        send(connfd, buff_rx, sizeof(buff_rx),0);
-							// UNLOCK RESOURCES
 				        }
+						// UNLOCK RESOURCES
 						pthread_mutex_unlock(&socketMutex);
 				        close(connfd);
 		            //}
