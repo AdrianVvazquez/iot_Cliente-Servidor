@@ -85,17 +85,19 @@ int main()
 		recv(sockfd, buf_rx, sizeof(buf_rx),0);
 		printf("[SERVER]: %s \n", buf_rx);
     	// GET KEYBOARD KEYS
+    	printf("opc: ");
 		fgets(buf_tx,sizeof(buf_tx),stdin);
     	// WRITE()
 		send(sockfd, buf_tx, sizeof(buf_tx),0);
-		bzero(buf_tx, sizeof());
+		bzero(buf_tx, sizeof(buf_tx));
+
 		// READ()
 		recv(sockfd, buf_rx, sizeof(buf_rx),0);
 		printf("[SERVER]: %s \n", buf_rx);
 		// UNLOCK RESOURCES
         pthread_mutex_unlock(&socketMutex);
         //printf("Sesion finalized. Press enter to exit...\n");
-        // SYNCHRONIZE
+        // SYNCHRONIZE main thread
 		//sleep(3);
 		
     //}

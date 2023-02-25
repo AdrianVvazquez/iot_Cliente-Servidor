@@ -38,7 +38,7 @@ struct Json_data
 int main()          /* input arguments are not used */
 { 
     int sockfd, connfd ;  /* listening socket and connection socket file descriptors */
-    unsigned int len;     /* length of client address */
+    unsigned int sock_len;     /* length of client address */
     struct sockaddr_in servaddr, client; 
     //struct Json_data json = {{1,2,3,123},{1,2,3,123},{1,2,3,123},{1,2,3,123,1,2,3,123,1,2,3,123}};
     
