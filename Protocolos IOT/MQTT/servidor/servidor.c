@@ -4,34 +4,33 @@ int idx=0, hosts[10]={0};
 struct sockaddr_in servaddr, client; 
 
 void *readWrite(void *param) {
-
 	while(1)
 	{
 		for(int i=0; i<10; i++)
 		{	
 			if(hosts[i] != 0)
 			{
- 		   		char buf_rx[BUFF_SIZE];   /* buffers for reception  */
- 		   		//char buf_tx[BUFF_SIZE];   /* buffers for transfer  */
-				
-				sConnect connectFrame;
-				// READ CONNECT
-				int bytes_received = recv(hosts[i], &connectFrame, sizeof(buf_rx), 0);
-				if (bytes_received == -1) {
-					perror("Error en recv");
-				} else {
-					printf("[CLIENT %i]\n", i+1);
-					printf("Type: : %i\n", connectFrame.bFrameType);
-					printf("Size: %i\n", connectFrame.wLen);
-					printf("Cliente ID: %s\n", connectFrame.sClientID);
-					printf("Level protocol: %i\n", connectFrame.bProtocol);
-					printf("Clean session: %i\n", connectFrame.bCleanSession);
-					printf("Keep Alive interval: %i\n\n", connectFrame.wKeepAlive);
+				while(1)
+				{
+					sConnect connectFrame;
+					// READ CONNECT
+					int bytes_received = recv(hosts[i], &connectFrame, sizeof(connectFrame), 0);
+					if (bytes_received == -1) {
+						perror("Nothing to receive");
+						close(hosts[i]);
+						hosts[i] = 0;
+						idx = i;		// Cambiar nuevo tamaño de lista
+						break;
+					} else {
+						printf("[CLIENT %i]\n", i+1);
+						printf("Type: : %i\n", connectFrame.bFrameType);
+						printf("Size: %i\n", connectFrame.wLen);
+						printf("Cliente ID: %s\n", connectFrame.sClientID);
+						printf("Level protocol: %i\n", connectFrame.bProtocol);
+						printf("Clean session: %i\n", connectFrame.bCleanSession);
+						printf("Keep Alive interval: %i\n\n", connectFrame.wKeepAlive);
+					}
 				}
-
-				close(hosts[i]);
-				hosts[i] = 0;
-				idx = i;		// Cambiar nuevo tamaño de lista
 			}
 		}
 	}	
