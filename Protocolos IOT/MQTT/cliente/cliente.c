@@ -1,5 +1,7 @@
 #include "header.h"
 
+int timer=60;
+
 sConnect createFrame_Connect(char *argv, uint16_t size) {
 	sConnect connectFrame;
 	
@@ -13,22 +15,48 @@ sConnect createFrame_Connect(char *argv, uint16_t size) {
 	return connectFrame;
 }
 
-sMessage createFrame_Mesasage() {
-	sMessage messageFrame;
+sPing createFrame_PingRequest() {
+	sPing pingRequestFrame;
 	
-    messageFrame.bFrameType = MESSAGE_TYPE_FRAME;
-    messageFrame.wLen = (uint16_t) 0x02;
-    messageFrame.returnCode = 0x00;
+    pingRequestFrame.bFrameType = MESSAGE_TYPE_FRAME;
+    pingRequestFrame.wLen = 0x0002;
+    pingRequestFrame.reservado = 0x00;
+    pingRequestFrame.returnCode = 0x00;
 	
-	return messageFrame;
+	return pingRequestFrame;
 }
 
+void *keepAliveFunc(void *param) {
+	
+	while(1)
+	{
+    	if (timer == 0)
+    	{
+    		printf("Timer is 0. Closing connection ...\n");	
+			pthread_exit(0);
+    	}
+    	
+    	if (timer%KEEP_ALIVE == 0)
+    	{
+    		printf("¡¡%i segundos!!\n", timer);	
+    	} 
+    	else 
+    	{
+			printf("%i segundos\n", timer);
+    	}
+		sleep(1);
+		timer--;
+    }	
+}
 
-int main(int32_t argc, char *argv[]){
-    int sockfd, len_tx, timer=60;
-    struct sockaddr_in servaddr; 
-    // char buf_rx[BUFF_SIZE];
-   	
+int main(int32_t argc, char *argv[]){ 
+	/* Identifier */
+	//pthread_t tid;
+	/* Attributes */
+	pthread_attr_t attr;
+	/* Set the default attributes of the thread*/
+	pthread_attr_init(&attr);
+	
     /* Socket creation */
     sockfd = socket(AF_INET, SOCK_STREAM, 0); 
     if (sockfd < 0) 
@@ -42,7 +70,6 @@ int main(int32_t argc, char *argv[]){
     }
     
     memset(&servaddr, 0, sizeof(servaddr));
-    
     /* assign IP, PORT */
     servaddr.sin_family = AF_INET; 
     servaddr.sin_addr.s_addr = inet_addr( SERVER_ADDRESS );
@@ -56,41 +83,38 @@ int main(int32_t argc, char *argv[]){
     } 
     printf("Status: Connected to the server..\n\n");
     
-    while(1)
-    {
+    //pthread_create(&tid, &attr, keepAliveFunc, NULL);
     	
-    	if (timer <= 0)
-    	{
-    		printf("Timer is 0. Closing connection ...\n");
-    		break;
-    	}
-    	
-    	if (timer%KEEP_ALIVE == 0)
-    	{
-    		printf("5 segundos\n");	
-    		
-    		sConnect frametoSend = createFrame_Connect(argv[1], strlen(argv[1]));
-			
-			printf("Type: : %i\n", frametoSend.bFrameType);
-			printf("Size: %i\n", frametoSend.wLen);
-			printf("Cliente ID: %s\n", frametoSend.sClientID);
-			printf("Level protocol: %i\n", frametoSend.bProtocol);
-			printf("Clean session: %i\n", frametoSend.bCleanSession);
-			printf("Keep Alive interval: %i\n", frametoSend.wKeepAlive);
-			
-			printf("\nEnviando... %lu bytes...\n", sizeof(frametoSend));
-			
-			sleep(5);
-			len_tx = send(sockfd, &frametoSend, sizeof(frametoSend), 0);
-			printf("... %i bytes... enviados\n", len_tx);
-    		
-    		
-    	}
-    	
-    	timer--;
-    }
-    
-    close(sockfd);
+	sConnect connectFrame = createFrame_Connect(argv[1], strlen(argv[1]));
+	printf("Sending connect request... %lu bytes...\n", sizeof(connectFrame));
+	
+	len_tx = send(sockfd, &connectFrame, sizeof(connectFrame), 0);	// send connect
+	sleep(1);
+	printf("... %i bytes... enviados\n\n", len_tx);
+	
+	sCONNACK connackFrame;
+	len_rx = recv(sockfd, &connackFrame, sizeof(connackFrame), 0);		// recv ack
+	printf("[SERVER] connack\n");
+	printf("Type: %i\n", connackFrame.bFrameType);
+	printf("Size: %i\n", connackFrame.wLen);
+	printf("Reservado: %i\n", connackFrame.reservado);
+	printf("Return Code: %i\n\n", connackFrame.returnCode);
+		
+	sPing pingRequestFrame = createFrame_PingRequest();
+	printf("Sending ping request... %lu bytes...\n", sizeof(pingRequestFrame));
+	
+	len_tx = send(sockfd, &pingRequestFrame, sizeof(pingRequestFrame), 0);	// send ping request
+	sleep(1);
+	printf("... %i bytes... enviados\n\n", len_tx);
+	
+	sPing pingResponseFrame;
+	len_rx = recv(sockfd, &pingResponseFrame, sizeof(pingResponseFrame), 0);		// recv ack
+	printf("[SERVER] ping response\n");
+	printf("Type: %i\n", pingResponseFrame.bFrameType);
+	printf("Size: %i\n", pingResponseFrame.wLen);
+	printf("Reservado: %i\n", pingResponseFrame.reservado);
+	printf("Return Code: %i\n\n", pingResponseFrame.returnCode);
+	//pthread_join(tid, NULL);
     
 	return 0;
 }

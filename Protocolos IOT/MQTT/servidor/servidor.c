@@ -1,7 +1,26 @@
 #include "header.h"
 
-int idx=0, hosts[10]={0};
-struct sockaddr_in servaddr, client; 
+sCONNACK createFrame_ACK() {
+	sCONNACK ACKFrame;
+	
+    ACKFrame.bFrameType = CONNACK_TYPE_FRAME;
+    ACKFrame.wLen = (uint16_t) 0x02;
+    ACKFrame.reservado = 0x00;
+    ACKFrame.returnCode = 0x00;
+	
+	return ACKFrame;
+}
+
+sPing createFrame_PingResponse() {
+	sPing pingResponseFrame;
+	
+    pingResponseFrame.bFrameType = MESSAGE_TYPE_FRAME;
+    pingResponseFrame.wLen = 0x0002;
+    pingResponseFrame.reservado = 0x00;
+    pingResponseFrame.returnCode = 0x01;
+	
+	return pingResponseFrame;
+}
 
 void *readWrite(void *param) {
 	while(1)
@@ -10,27 +29,54 @@ void *readWrite(void *param) {
 		{	
 			if(hosts[i] != 0)
 			{
-				while(1)
-				{
-					sConnect connectFrame;
-					// READ CONNECT
-					int bytes_received = recv(hosts[i], &connectFrame, sizeof(connectFrame), 0);
-					if (bytes_received == -1) {
-						perror("Nothing to receive");
-						close(hosts[i]);
-						hosts[i] = 0;
-						idx = i;		// Cambiar nuevo tamaño de lista
-						break;
-					} else {
-						printf("[CLIENT %i]\n", i+1);
-						printf("Type: : %i\n", connectFrame.bFrameType);
-						printf("Size: %i\n", connectFrame.wLen);
-						printf("Cliente ID: %s\n", connectFrame.sClientID);
-						printf("Level protocol: %i\n", connectFrame.bProtocol);
-						printf("Clean session: %i\n", connectFrame.bCleanSession);
-						printf("Keep Alive interval: %i\n\n", connectFrame.wKeepAlive);
-					}
-				}
+				int bytes_received, bytes_send;
+				sConnect connectFrame;
+				sCONNACK connackFrame;
+				sPing pingRequestFrame, pingResponseFrame;
+				
+				// read connect
+				bytes_received = recv(hosts[i], &connectFrame, sizeof(connectFrame), 0);
+				
+				if (bytes_received == -1) {
+					perror("Nothing to receive\n");
+					break;
+				} 
+
+				printf("[CLIENT %i] connect\n", i+1);
+				printf("Type: %i\n", connectFrame.bFrameType);
+				printf("Size: %i\n", connectFrame.wLen);
+				printf("Cliente ID: %s\n", connectFrame.sClientID);
+				printf("Level protocol: %i\n", connectFrame.bProtocol);
+				printf("Clean session: %i\n", connectFrame.bCleanSession);
+				printf("Keep Alive interval: %i\n\n", connectFrame.wKeepAlive);
+				
+				connackFrame = createFrame_ACK();
+				// send ack
+				bytes_send = send(hosts[i], &connackFrame, sizeof(connackFrame), 0);
+				printf("Sending connack... %i bytes... enviados\n\n", bytes_send);
+				
+				// read ping request
+				bytes_received = recv(hosts[i], &pingRequestFrame, sizeof(pingRequestFrame), 0);
+				
+				if (bytes_received == -1) {
+					perror("Nothing to receive\n");
+					break;
+				} 
+
+				printf("[CLIENT %i] ping request\n", i+1);
+				printf("Type: %i\n", pingRequestFrame.bFrameType);
+				printf("Size: %i\n", pingRequestFrame.wLen);
+				printf("Reserved: %i\n", pingRequestFrame.reservado);
+				printf("Return code: %i\n\n", pingRequestFrame.returnCode);
+				
+				pingResponseFrame = createFrame_PingResponse();
+				// send ack
+				bytes_send = send(hosts[i], &pingResponseFrame, sizeof(pingResponseFrame), 0);
+				printf("Sending ping response... %i bytes... enviados\n\n", bytes_send);
+				
+				close(hosts[i]);
+				hosts[i] = 0;
+				idx = i;		// Cambiar nuevo tamaño de lista
 			}
 		}
 	}	
